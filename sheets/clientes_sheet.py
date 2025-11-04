@@ -1,23 +1,71 @@
+import asyncio
+
+
 class ClientesSheet:
     def __init__(self, service_sheet, datos_clientes):
         self.service_sheet = service_sheet
         self.service = service_sheet.get_service()
         self.datos_clientes = datos_clientes
 
-    def update_clientes_sheet(
-        self,
-    ):
-        self.clear_clientes_data()
-        if not self.datos_clientes.empty:
-            # actualizar la hoja de Google Sheets con los datos de clientes desde la fila 2
-            self.service.spreadsheets().values().update(
-                spreadsheetId=self.service_sheet.get_spreadsheet_id(),
-                range=f"{self.service_sheet.get_sheet_name()}!A2",
-                valueInputOption="RAW",
-                body={"values": self.datos_clientes.values.tolist()},
-            ).execute()
+    async def async_update_clientes_sheet(self):
+        """
+        Versión async: ejecuta las operaciones de Sheets en un thread para no bloquear el event loop.
+        Devuelve el resultado de la actualización si hay datos, o el resultado del clear.
+        """
+
+        def _work():
+            # clear
+            range_to_clear = f"{self.service_sheet.get_sheet_name()}!2:1000"
+            clear_req = (
+                self.service.spreadsheets()
+                .values()
+                .clear(
+                    spreadsheetId=self.service_sheet.get_spreadsheet_id(),
+                    range=range_to_clear,
+                    body={},
+                )
+            )
+            clear_resp = clear_req.execute()
+
+            # update si hay datos
+            if not self.datos_clientes.empty:
+                update_resp = (
+                    self.service.spreadsheets()
+                    .values()
+                    .update(
+                        spreadsheetId=self.service_sheet.get_spreadsheet_id(),
+                        range=f"{self.service_sheet.get_sheet_name()}!A2",
+                        valueInputOption="RAW",
+                        body={"values": self.datos_clientes.values.tolist()},
+                    )
+                ).execute()
+                return update_resp
+            return clear_resp
+
+        return await asyncio.to_thread(_work)
+
+    def update_clientes_sheet(self):
+        """
+        Wrapper síncrono alrededor de async_update_clientes_sheet.
+        Si hay un event loop en ejecución, lanza RuntimeError indicando usar la versión async.
+        """
+        try:
+            asyncio.get_running_loop()
+            loop_running = True
+        except RuntimeError:
+            loop_running = False
+
+        if loop_running:
+            raise RuntimeError(
+                "Hay un event loop en ejecución. Use 'await async_update_articulos_sheet()' en código async."
+            )
+
+        return asyncio.run(self.async_update_clientes_sheet())
 
     def clear_clientes_data(self):
+        """
+        Wrapper síncrono para borrar el rango de la hoja (usa la implementación sync).
+        """
         range_to_clear = f"{self.service_sheet.get_sheet_name()}!2:1000"  # Ajusta 1000 si esperas más filas
         request = (
             self.service.spreadsheets()
@@ -30,6 +78,10 @@ class ClientesSheet:
         )
         response = request.execute()
         return response
+
+    async def async_clear_clientes_data(self):
+        """Versión async de clear_clientes_data (ejecuta en thread)."""
+        return await asyncio.to_thread(self.clear_clientes_data)
 
 
 if __name__ == "__main__":
@@ -62,10 +114,8 @@ if __name__ == "__main__":
 
     sqlserver_connector.connect()
     db = DatabaseConnector(sqlserver_connector)
-    oMonitoreoClientes = ClientesMonitoreo(db)
-    datos_clientes = oMonitoreoClientes.obtener_clientes_activos()[
-        ["co_cli", "cli_des", "telefonos"]
-    ]
+    oClientesMonitoreo = ClientesMonitoreo(db)
+    datos_clientes = oClientesMonitoreo.obtener_clientes_activos()
     # Usa variables de entorno o reemplaza por tus valores
     SPREADSHEET_ID = os.getenv("FILE_RECIBOS_ID")
     SHEET_NAME = os.getenv("FILE_RECIBOS_NOMBRE_HOJA_CLIENTES")
@@ -73,10 +123,10 @@ if __name__ == "__main__":
 
     try:
         oServiceSheet = ServiceSheet(SPREADSHEET_ID, SHEET_NAME, CREDENTIALS_FILE)
-        oClientesSheet = ClientesSheet(
+        oSheetClientes = ClientesSheet(
             service_sheet=oServiceSheet, datos_clientes=datos_clientes
         )
-        oClientesSheet.update_clientes_sheet()
+        oSheetClientes.update_clientes_sheet()
         print("Hoja de clientes actualizada correctamente.")
     except Exception as e:
         print(f"Error al actualizar la hoja de clientes: {e}")

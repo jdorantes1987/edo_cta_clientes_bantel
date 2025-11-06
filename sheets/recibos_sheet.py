@@ -20,7 +20,7 @@ class RecibosSheet:
 
         def _filter(df):
             return df[
-                (df["facturar"] == "SI")
+                (df["incluir"] == "SI")
                 & (df["razon_social"] != "No existe")
                 & (df["desc_art"] != "No existe")
             ]
@@ -72,4 +72,4 @@ if __name__ == "__main__":
 
     oManagerSheet = ManagerSheet(SHEET_NAME, SPREADSHEET_ID, CREDENTIALS_FILE)
     oRecibosSheet = RecibosSheet(oManagerSheet)
-    print(oRecibosSheet.get_data_recibos_a_facturar().to_string())
+    print(oRecibosSheet.get_data_recibos_a_facturar())

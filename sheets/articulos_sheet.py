@@ -89,7 +89,7 @@ if __name__ == "__main__":
     import sys
 
     from dotenv import load_dotenv
-    from monitoreo.articulos import ArtículosMonitoreo
+    from monitoreo.articulos import ArticulosMonitoreo
 
     sys.path.append("../conexiones")
     sys.path.append("../manager_sheets")
@@ -114,7 +114,7 @@ if __name__ == "__main__":
 
     sqlserver_connector.connect()
     db = DatabaseConnector(sqlserver_connector)
-    oArticulosMonitoreo = ArtículosMonitoreo(db)
+    oArticulosMonitoreo = ArticulosMonitoreo(db)
     datos_articulos = oArticulosMonitoreo.obtener_articulos()
     # Usa variables de entorno o reemplaza por tus valores
     SPREADSHEET_ID = os.getenv("FILE_RECIBOS_ID")

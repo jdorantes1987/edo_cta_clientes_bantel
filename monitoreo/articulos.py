@@ -4,7 +4,7 @@ sys.path.append("../profit")
 from data.mod.inventario.articulos import Articulos  # noqa: E402
 
 
-class ArtículosMonitoreo:
+class ArticulosMonitoreo:
     def __init__(self, db):
         self.db = db
         self.oArtículos = Articulos(db)
@@ -50,7 +50,7 @@ if __name__ == "__main__":
     # Conexión a la base de datos de la derecha
     sqlserver_connector = SQLServerConnector(**db_credentials)
     db_derecha = DatabaseConnector(sqlserver_connector)
-    oArticulos = ArtículosMonitoreo(db_derecha)
+    oArticulos = ArticulosMonitoreo(db_derecha)
     articulos_derecha = oArticulos.obtener_articulos()
     print(articulos_derecha)
     db_derecha.close_connection()

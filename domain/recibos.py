@@ -47,7 +47,9 @@ class Recibos:
             ".",
         )  # Reemplazar coma decimal por punto
         data["monto_base"] = data["monto_base"].astype(float)
-        data["total_monto_base"] = data["cantidad"] * data["monto_base"]
+        data["total_monto_base"] = round(data["cantidad"] * data["monto_base"], 2)
+        data["iva"] = round(data["total_monto_base"] * 0.16, 2)
+        data["total_monto_neto"] = data["total_monto_base"] + data["iva"]
         return data
 
     def es_data_consistente(self) -> bool:
@@ -68,7 +70,7 @@ class Recibos:
         # True si no hay enum e id_client repetidos
         return not grouped[["enum", "id_client"]].duplicated().any()
 
-    def data_encabezados_recibos(self):
+    def _data_encabezados_recibos(self):
         data = self._data_procesada().copy()
         data = data.groupby(
             [
@@ -83,11 +85,13 @@ class Recibos:
         ).agg(
             {
                 "total_monto_base": "sum",
+                "iva": "sum",
+                "total_monto_neto": "sum",
             }
         )
         return data
 
-    def data_detalle_recibos(self):
+    def _data_detalle_recibos(self):
         data = self._data_procesada()
         return data
 
@@ -97,8 +101,8 @@ class Recibos:
             resultado = {"success": False, "message": "Los datos no son consistentes."}
             return resultado
 
-        encabezados = self.data_encabezados_recibos()
-        detalle = self.data_detalle_recibos()
+        encabezados = self._data_encabezados_recibos()
+        detalle = self._data_detalle_recibos()
 
         hoy = datetime.now().strftime("%Y-%m-%d")
         last_id = self.get_last_id_recibo(hoy)
@@ -122,14 +126,14 @@ class Recibos:
                 "monto_desc_glob": 0,
                 "monto_reca": 0,
                 "total_bruto": row["total_monto_base"],
-                "monto_imp": round(float(row["total_monto_base"]) * 0.16, 2),
+                "monto_imp": row["iva"],
                 "monto_imp2": 0,
                 "monto_imp3": 0,
                 "otros1": 0,
                 "otros2": 0,
                 "otros3": 0,
-                "total_neto": round(float(row["total_monto_base"]) * 1.16, 2),
-                "saldo": round(float(row["total_monto_base"]) * 1.16, 2),
+                "total_neto": row["total_monto_neto"],
+                "saldo": row["total_monto_neto"],
                 "contrib": 1,
                 "impresa": 0,
                 "co_us_in": "JACK",
@@ -150,7 +154,7 @@ class Recibos:
             detalles_recibo = detalle[
                 (detalle["id_client"] == row["id_client"])
                 & (detalle["enum"] == row["enum"])
-            ]
+            ].reset_index(drop=True)
             for index_det, linea in detalles_recibo.iterrows():
                 comentario = "{l1} \n {l2} \n {l3}".format(
                     l1=linea["comentario_l1"],
@@ -173,10 +177,10 @@ class Recibos:
                     "porc_imp": 16.0,
                     "porc_imp2": 0,
                     "porc_imp3": 0,
-                    "monto_imp": round(linea["monto_base"] * 0.16, 2),
+                    "monto_imp": linea["iva"],
                     "monto_imp2": 0,
                     "monto_imp3": 0,
-                    "reng_neto": round(linea["monto_base"] * 1.16, 2),
+                    "reng_neto": linea["total_monto_neto"],
                     "pendiente": linea["cantidad"],
                     "pendiente2": 0,
                     "lote_asignado": 0,
@@ -245,9 +249,9 @@ if __name__ == "__main__":
     data_recibos_a_procesar = RecibosSheet(oManagerSheet).get_data_recibos_a_facturar()
     oPedidos = Pedidos(db)
     oRecibo = Recibos(db, data_recibos_a_procesar, oPedidos)
-    last_id = oRecibo.get_last_id_recibo("2025-11-04")
+    last_id = oRecibo.get_last_id_recibo("2025-11-30")
     # print(f"Último ID de recibo: {last_id}")
-    print(f"es data consistente: {oRecibo.es_data_consistente()}")
+    # print(f"es data consistente: {oRecibo.es_data_consistente()}")
     if oRecibo.es_data_consistente():
         resultado = oRecibo.procesar_recibos_masivos()
         print(f"Resultado del procesamiento: {resultado}")
@@ -255,8 +259,6 @@ if __name__ == "__main__":
             db.commit()
         else:
             db.rollback()
-    # print(oRecibo.data_encabezados_recibos())
-    # print(oRecibo.data_detalle_recibos())
     # # Generar los siguientes números de recibo
     # print(oRecibo.get_next_num_recibo(last_id))
     # print(oRecibo.get_next_num_recibo(last_id))

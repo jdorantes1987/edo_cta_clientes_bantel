@@ -52,8 +52,6 @@ def _extracted_from_make_sidebar():
 
 def logout():
     st.session_state.logged_in = False
-    st.session_state.stage = 0
-    st.session_state.stage2 = 0
     st.info("Se ha cerrado la sesión con éxito!")
     sleep(0.5)
     st.switch_page("app.py")

@@ -6,15 +6,18 @@ import streamlit as st
 from dotenv import load_dotenv
 
 from domain.edo_cta import EdoCta
+from sheets.bcv_sheet import HistBCVSheet
 
 sys.path.append("../authenticator")
 sys.path.append("../profit")
 sys.path.append("../conexiones")
+sys.path.append("../manager_sheets")
 
 from auth import AuthManager  # noqa: E402
 from conn.database_connector import DatabaseConnector  # noqa: E402
 from conn.sql_server_connector import SQLServerConnector  # noqa: E402
 from data.mod.ventas.pedidos import Pedidos  # noqa: E402
+from manager_sheet import ManagerSheet  # noqa: E402
 from role_manager_db import RoleManagerDB  # noqa: E402
 
 # Configuración de página con fondo personalizado
@@ -59,6 +62,16 @@ if st.session_state.stage == 0:
         "password": os.getenv("DB_PASSWORD_PROFIT"),
     }
     sqlserver_connector = SQLServerConnector(**db_credentials)
+
+    credentials_hist_bcv = {
+        "file_sheet_name": os.getenv("FILE_HISTORICO_TASAS_BCV_NAME"),
+        "spreadsheet_id": os.getenv("HISTORICO_TASAS_BCV_ID"),
+        "credentials_file": os.getenv("HISTORICO_TASAS_BCV_CREDENTIALS"),
+    }
+    oManagerSheet = ManagerSheet(**credentials_hist_bcv)
+    oHistBCVSheet = HistBCVSheet(oManagerSheet)
+    st.session_state.tasa_today = oHistBCVSheet.get_tasa_today()
+
     try:
         sqlserver_connector.connect()
     except Exception as e:
@@ -71,7 +84,8 @@ if st.session_state.stage == 0:
     st.session_state.role_manager = RoleManagerDB(st.session_state.conexion)
     st.session_state.pedidos = Pedidos(st.session_state.conexion)
     st.session_state.edo_cta = EdoCta(
-        st.session_state.conexion, st.session_state.pedidos
+        st.session_state.conexion,
+        st.session_state.pedidos,
     )
     set_stage(1)
 
@@ -144,4 +158,6 @@ if st.session_state.stage == 1:
             if st.button("Atrás", type="primary"):
                 del st.session_state.usuario
                 del st.session_state.password
+                st.session_state.stage = 0
+                st.session_state.stage2 = 0
                 st.rerun()

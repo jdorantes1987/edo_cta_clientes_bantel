@@ -1,4 +1,5 @@
 import streamlit as st
+from time import sleep
 from pandas import DataFrame
 
 from helpers.navigation import make_sidebar
@@ -11,6 +12,7 @@ for k, v in {
     "stage2": 0,
     "total_sel": 0.0,
     "seleccionados": DataFrame(),
+    "pagos_realizados": [],
 }.items():
     if k not in st.session_state:
         st.session_state[k] = v
@@ -154,43 +156,72 @@ if st.session_state.stage2 == 1:
         st.info("Aquí se mostrarán los movimientos realizados por el cliente.")
 
 if st.session_state.stage2 == 2:
-    col1, col2 = st.columns(2)
+    monto_en_bs = st.session_state.tasa_today * st.session_state.total_sel
+    col1, col2, col3 = st.columns(3)
     st.subheader("Validación de pagos")
     with col1:
         st.metric(
-            "Recibos a pagar",
-            st.session_state.seleccionados.shape[0],
+            "Tasa del día (Bs/USD)",
+            f"Bs {st.session_state.tasa_today:,.2f}",
         )
     with col2:
         st.metric(
             "Total a pagar",
-            f"${st.session_state.total_sel:,.2f}",
+            f"Bs {monto_en_bs:,.2f}",
         )
 
-    col3, col4, col5 = st.columns(3)
     with col3:
-        st.date_input(
-            "Fecha del pago",
-            key="fecha_pago",
+        st.metric(
+            "Recibos a pagar",
+            st.session_state.seleccionados.shape[0],
         )
+
+    col4, col5, col6 = st.columns(3)
     with col4:
+        st.date_input(
+            "📅 Fecha del pago",
+            key="fecha_pago",
+            format="DD/MM/YYYY",
+            disabled=True,
+        )
+    with col5:
         st.text_input(
-            "Referencia bancaria",
+            "📋 Referencia bancaria",
             key="referencia_bancaria",
             placeholder="Ingresa la referencia bancaria del pago",
         )
-    with col5:
+    with col6:
         st.number_input(
-            "Monto del pago (USD)",
+            "💵 Monto del pago (Bs)",
             key="monto_pago",
             min_value=0.0,
-            value=float(st.session_state.total_sel),
+            value=float(monto_en_bs),
             format="%.2f",
+            disabled=True,
         )
     st.info(
         "Aquí se mostrarán los detalles para validar y registrar los pagos seleccionados."
     )
-    # icono de regresar
-    if st.button(" <- recibos pendientes"):
-        set_stage(0)
-        st.rerun()
+
+    col7, col8 = st.columns(2)
+    with col7:
+        # icono de regresar
+        if st.button("🌐 Validar y registrar pago"):
+            st.session_state.pagos_realizados.append(
+                {
+                    "fecha_pago": st.session_state.fecha_pago,
+                    "referencia_bancaria": st.session_state.referencia_bancaria,
+                    "monto_pago": st.session_state.monto_pago,
+                }
+            )
+            st.success("Pago registrado con éxito!")
+            sleep(0.5)
+            st.info("Actualizando información...")
+            sleep(0.5)
+            set_stage(0)
+            st.rerun()
+    with col8:
+        # icono de regresar
+        if st.button(" 🔙 recibos pendientes"):
+            set_stage(0)
+            st.rerun()

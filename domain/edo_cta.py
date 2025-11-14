@@ -76,10 +76,14 @@ class EdoCta:
 if __name__ == "__main__":
     from dotenv import load_dotenv
 
+    from sheets.bcv_sheet import HistBCVSheet
+
     sys.path.append("../conexiones")
+    sys.path.append("../manager_sheets")
 
     from conn.database_connector import DatabaseConnector
     from conn.sql_server_connector import SQLServerConnector
+    from manager_sheet import ManagerSheet
 
     env_path = os.path.join("../conexiones", ".env")
     load_dotenv(
@@ -96,11 +100,23 @@ if __name__ == "__main__":
     )
     sqlserver_connector.connect()
     db = DatabaseConnector(sqlserver_connector)
+
+    SPREADSHEET_ID = os.getenv("HISTORICO_TASAS_BCV_ID")
+    SHEET_NAME = os.getenv("FILE_HISTORICO_TASAS_BCV_NAME")
+    CREDENTIALS_FILE = os.getenv("HISTORICO_TASAS_BCV_CREDENTIALS")
+
+    oManagerSheet = ManagerSheet(SHEET_NAME, SPREADSHEET_ID, CREDENTIALS_FILE)
+
+    oHistBCVSheet = HistBCVSheet(oManagerSheet)
+    historico_tasas = oHistBCVSheet.get_data_bcv()
     oPedidos = Pedidos(db)
     oEdoCta = EdoCta(db, oPedidos)
-    print(
-        oEdoCta.get_edo_cta_clientes(
-            cliente_d="J406119520", cliente_h="J406119520", status="SPRO"
+    if historico_tasas.empty:
+        print("No hay datos históricos disponibles.")
+    else:
+        print(
+            oEdoCta.get_edo_cta_clientes(
+                cliente_d="J298823291", cliente_h="J298823291", status="SPRO"
+            )
         )
-    )
     db.close_connection()

@@ -246,8 +246,10 @@ if __name__ == "__main__":
     SPREADSHEET_ID = os.getenv("FILE_RECIBOS_ID")
     SHEET_NAME = os.getenv("FILE_RECIBOS_NAME")
     CREDENTIALS_FILE = os.getenv("FILE_RECIBOS_CREDENTIALS")
-    oManagerSheet = ManagerSheet(SHEET_NAME, SPREADSHEET_ID, CREDENTIALS_FILE)
-    data_recibos_a_procesar = RecibosSheet(oManagerSheet).get_data_recibos_a_facturar()
+    oManagerSheet_recibos = ManagerSheet(SHEET_NAME, SPREADSHEET_ID, CREDENTIALS_FILE)
+    data_recibos_a_procesar = RecibosSheet(
+        oManagerSheet_recibos
+    ).get_data_recibos_a_facturar()
     oPedidos = Pedidos(db)
     oRecibo = Recibos(db, data_recibos_a_procesar, oPedidos)
     last_id = oRecibo.get_last_id_recibo("2025-11-30")

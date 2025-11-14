@@ -155,13 +155,15 @@ class Recibos:
                 (detalle["id_client"] == row["id_client"])
                 & (detalle["enum"] == row["enum"])
             ].reset_index(drop=True)
+            detalles_recibo["comentario"] = detalles_recibo[
+                ["comentario_l1", "comentario_l2", "comentario_l3"]
+            ].agg("\n".join, axis=1)
+            # Convertir cada fila del DataFrame a tupla
+            # detalles_recibo_tuples = list(
+            #     detalles_recibo.itertuples(index=False, name=None)
+            # )
+            # print(detalles_recibo_tuples)
             for index_det, linea in detalles_recibo.iterrows():
-                comentario = "{l1} \n {l2} \n {l3}".format(
-                    l1=linea["comentario_l1"],
-                    l2=linea["comentario_l2"],
-                    l3=linea["comentario_l3"],
-                ).replace("nan", "")
-
                 payload_det_pedido = {
                     "reng_num": index_det + 1,
                     "doc_num": next_num_recibo,
@@ -194,7 +196,7 @@ class Recibos:
                     "monto_imp3_afec_glob": 0,
                     "total_dev": 0,
                     "monto_dev": 0,
-                    "comentario": comentario,
+                    "comentario": linea["comentario"],
                     "otros": 0,
                     "co_us_in": "JACK",
                     "co_sucu_in": "01",

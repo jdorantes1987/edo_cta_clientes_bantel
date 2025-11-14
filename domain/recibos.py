@@ -106,6 +106,8 @@ class Recibos:
 
         hoy = datetime.now().strftime("%Y-%m-%d")
         last_id = self.get_last_id_recibo(hoy)
+        safe1 = []
+        safe2 = []
         for index, row in encabezados.iterrows():
             next_num_recibo = self.get_next_num_recibo(last_id)
             payload_pedido = {
@@ -141,14 +143,7 @@ class Recibos:
                 "co_us_mo": "JACK",
                 "co_sucu_mo": "01",
             }
-            safe1 = self.pedidos.normalize_payload_pedido(payload_pedido)
-            id_pedido = self.pedidos.create_pedidos(safe1)
-            if not id_pedido:
-                resultado = {
-                    "success": False,
-                    "message": "Error al insertar el pedido.",
-                }
-                break
+            safe1.append(self.pedidos.normalize_payload_pedido(payload_pedido))
 
             # # Filtrar los detalles correspondientes a este encabezado
             detalles_recibo = detalle[
@@ -158,11 +153,6 @@ class Recibos:
             detalles_recibo["comentario"] = detalles_recibo[
                 ["comentario_l1", "comentario_l2", "comentario_l3"]
             ].agg("\n".join, axis=1)
-            # Convertir cada fila del DataFrame a tupla
-            # detalles_recibo_tuples = list(
-            #     detalles_recibo.itertuples(index=False, name=None)
-            # )
-            # print(detalles_recibo_tuples)
             for index_det, linea in detalles_recibo.iterrows():
                 payload_det_pedido = {
                     "reng_num": index_det + 1,
@@ -203,14 +193,23 @@ class Recibos:
                     "co_us_mo": "JACK",
                     "co_sucu_mo": "01",
                 }
-                safe2 = self.pedidos.normalize_payload_det_pedido(payload_det_pedido)
-                detalle_id = self.pedidos.create_det_pedidos(safe2)
-                if not detalle_id:
-                    resultado = {
-                        "success": False,
-                        "message": "Error al insertar el detalle del pedido.",
-                    }
-                    break
+                safe2.append(
+                    self.pedidos.normalize_payload_det_pedido(payload_det_pedido)
+                )
+
+        pedidos_count_rows = self.pedidos.create_pedidos(safe1)
+        if not pedidos_count_rows:
+            resultado = {
+                "success": False,
+                "message": "Error al insertar el pedido.",
+            }
+
+        det_pedidos_count_rows = self.pedidos.create_det_pedidos(safe2)
+        if not det_pedidos_count_rows:
+            resultado = {
+                "success": False,
+                "message": "Error al insertar el detalle del pedido.",
+            }
         return resultado
 
 

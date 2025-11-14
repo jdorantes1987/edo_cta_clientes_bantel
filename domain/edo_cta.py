@@ -23,6 +23,26 @@ class EdoCta:
         status="TODO",
         anulado="NOT",
     ):
+        """
+        Obtiene el estado de cuenta de los clientes.
+        args:
+            numero_d (str, optional): Número de pedido desde. Defaults to None.
+            numero_h (str, optional): Número de pedido hasta. Defaults to None.
+            fecha_desde (date, optional): Fecha desde. Defaults to None.
+            fecha_hasta (date, optional): Fecha hasta. Defaults to None.
+            cliente_d (str, optional): Código de cliente desde. Defaults to None.
+            cliente_h (str, optional): Código de cliente hasta. Defaults to None.
+            status (str, optional): Estado de los pedidos:
+                'TODO' : Todos los pedidos.
+                'SPRO' : Pedidos sin procesar.
+                'PRO' : Pedidos procesados.
+                'PPRO' : Pedidos parcialmente procesados.
+            anulado (str, optional): Estado de anulación de los pedidos:
+                'SIT' : Pedidos anulados.
+                'NOT' : Pedidos no anulados.
+        Returns:
+            pd.DataFrame: DataFrame con el estado de cuenta de los clientes.
+        """
         data = self.pedidos.get_pedidos(
             numero_d=numero_d,
             numero_h=numero_h,
@@ -78,5 +98,9 @@ if __name__ == "__main__":
     db = DatabaseConnector(sqlserver_connector)
     oPedidos = Pedidos(db)
     oEdoCta = EdoCta(db, oPedidos)
-    print(oEdoCta.get_edo_cta_clientes(cliente_d="J407535560", cliente_h="J407535560"))
-    db.autocommit(False)
+    print(
+        oEdoCta.get_edo_cta_clientes(
+            cliente_d="J406119520", cliente_h="J406119520", status="SPRO"
+        )
+    )
+    db.close_connection()

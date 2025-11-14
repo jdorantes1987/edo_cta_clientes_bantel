@@ -1,0 +1,9 @@
+[client]
+showSidebarNavigation = false
+
+[theme]
+primaryColor="#2DA0FE"
+backgroundColor="#313131ff"
+secondaryBackgroundColor="#22252A"
+textColor="#e3e6e6ff"
+font="Segoe UI"

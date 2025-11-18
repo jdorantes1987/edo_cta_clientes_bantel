@@ -24,7 +24,7 @@ from role_manager_db import RoleManagerDB  # noqa: E402
 st.set_page_config(
     page_title="Login",
     layout="centered",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
     page_icon="",
 )
 
@@ -154,9 +154,10 @@ if st.session_state.stage == 1:
             max_chars=70,
         )
         if st.session_state.password:
+            st.button("Iniciar sesión", type="primary")
             iniciar_sesion(st.session_state.usuario, st.session_state.password)
         else:
-            if st.button("Atrás", type="primary"):
+            if st.button("Atrás"):
                 del st.session_state.usuario
                 del st.session_state.password
                 st.session_state.stage = 0

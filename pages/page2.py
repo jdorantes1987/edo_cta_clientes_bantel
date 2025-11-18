@@ -42,7 +42,9 @@ if st.session_state.stage2 == 1:
 
     tab1, tab2 = st.tabs(["📑 Recibos pendientes", "📰 Movimientos"])
     with tab1:
-        with st.expander(" Seguir instrucciones 👇", expanded=False):
+        with st.expander(
+            " Hacer **'click'** para ver instrucciones 👇", expanded=False
+        ):
             st.markdown(
                 """
                 1. **Revisa los recibos pendientes en la tabla.**
@@ -66,18 +68,23 @@ if st.session_state.stage2 == 1:
             df_recibos,
             column_config={
                 "cod_cli": None,
+                "sel": st.column_config.CheckboxColumn(
+                    "selec.",
+                    help="Selecciona el recibo a validar.",
+                    width="small",
+                ),
                 "cli_des": st.column_config.TextColumn(
                     "Razón Social",
                     width="large",
                 ),
                 "fec_emis": st.column_config.DateColumn(
-                    "Fecha de Emisión",
+                    "Fecha",
+                    width="small",
                     help="Fecha de emisión del recibo.",
                     format="DD/MM/YYYY",
                 ),
                 "doc_num": st.column_config.TextColumn(
                     "Recibo",
-                    width="small",
                 ),
                 "descrip": st.column_config.TextColumn(
                     "Descripción",
@@ -97,14 +104,15 @@ if st.session_state.stage2 == 1:
                 "sel",
                 "doc_num",
                 "fec_emis",
+                "total_monto_neto",
                 "cli_des",
                 "descrip",
-                "total_monto_neto",
             ],
             disabled=[
                 "fec_emis",
                 "doc_num",
                 "descrip",
+                "cli_des",
                 "total_monto_base",
                 "iva",
                 "total_monto_neto",

@@ -18,8 +18,9 @@ for k, v in {
         st.session_state[k] = v
         st.session_state[k] = v
 
-
-st.title("Recibos")
+"""
+# Estado de cuenta del cliente
+"""
 
 if st.button("Refrescar"):
     st.cache_data.clear()
@@ -45,13 +46,17 @@ def get_recibos_pendientes(cod_cliente: str):
 if st.session_state.stage2 == 1:
     tab1, tab2 = st.tabs(["📑 Recibos pendientes", "📰 Movimientos"])
     with tab1:
-        with st.expander("💵 Instrucciones para registrar un pago", expanded=False):
+        """
+        ## ℹ️ Para registrar pagos:
+        """
+        with st.expander(" Seguir instrucciones 👇", expanded=False):
             st.markdown(
                 """
-                1. Revisa los recibos pendientes en la tabla.
-                2. Selecciona los recibos que deseas pagar.
-                3. Anota la fecha , referencia bancaria y monto del pago móvil.
-                4. Presiona el botón de "Registrar y validar pago".
+                1. **Revisa los recibos pendientes en la tabla.**
+                2. **Selecciona los recibos que deseas pagar.**
+                3. **Presiona el botón de *"Registrar y validar pago"*.**
+                4. **Anota la fecha, referencia bancaria y monto del pago móvil.**
+                5. **Presiona el botón de *"Registrar y validar pago"*.**
                 """
             )
 
@@ -141,7 +146,7 @@ if st.session_state.stage2 == 1:
                 st.metric("Total seleccionado", f"${st.session_state.total_sel:,.2f}")
 
         # Acción principal
-        if st.button("Registrar y validar pago"):
+        if st.button("Validar pago"):
             if st.session_state.seleccionados.empty:
                 st.warning("No has seleccionado ningún recibo para pagar.")
                 st.stop()
@@ -155,14 +160,27 @@ if st.session_state.stage2 == 1:
         st.subheader("Movimientos realizados")
         st.info("Aquí se mostrarán los movimientos realizados por el cliente.")
 
-if st.session_state.stage2 == 2:
+
+if st.session_state.stage2 >= 2:
+    """
+    ## Datos del pago
+    """
+
+    def habilitar_boton():
+        if (
+            st.session_state.referencia_bancaria.strip() != ""
+            and len(st.session_state.referencia_bancaria.strip()) >= 1
+        ):
+            set_stage(3)
+        else:
+            set_stage(2)
+
     monto_en_bs = st.session_state.tasa_today * st.session_state.total_sel
     col1, col2, col3 = st.columns(3)
-    st.subheader("Validación de pagos")
     with col1:
         st.metric(
             "Tasa del día (Bs/USD)",
-            f"Bs {st.session_state.tasa_today:,.2f}",
+            f"Bs {st.session_state.tasa_today:,.4f}",
         )
     with col2:
         st.metric(
@@ -189,6 +207,8 @@ if st.session_state.stage2 == 2:
             "📋 Referencia bancaria",
             key="referencia_bancaria",
             placeholder="Ingresa la referencia bancaria del pago",
+            on_change=habilitar_boton,
+            max_chars=13,
         )
     with col6:
         st.number_input(
@@ -199,14 +219,12 @@ if st.session_state.stage2 == 2:
             format="%.2f",
             disabled=True,
         )
-    st.info(
-        "Aquí se mostrarán los detalles para validar y registrar los pagos seleccionados."
-    )
 
+if st.session_state.stage2 == 3:
     col7, col8 = st.columns(2)
     with col7:
         # icono de regresar
-        if st.button("🌐 Validar y registrar pago"):
+        if st.button("💱 Registrar pago"):
             st.session_state.pagos_realizados.append(
                 {
                     "fecha_pago": st.session_state.fecha_pago,
@@ -222,6 +240,6 @@ if st.session_state.stage2 == 2:
             st.rerun()
     with col8:
         # icono de regresar
-        if st.button(" 🔙 recibos pendientes"):
+        if st.button(" 📊 recibos pendientes"):
             set_stage(0)
             st.rerun()

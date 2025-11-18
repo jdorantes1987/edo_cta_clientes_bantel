@@ -22,7 +22,7 @@ def make_sidebar():
         )
         # imagen desde URL
         # Quitar margenes
-        image_url = "images/pexelweb.gif"
+        image_url = "images/payment-method-bank-svgrepo-com.svg"
 
         st.image(image_url, use_container_width=True)
         # # imagen local

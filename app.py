@@ -151,6 +151,7 @@ if st.session_state.stage == 1:
             type="password",
             key="password",
             placeholder="Ingresa tu contraseña y presiona Enter",
+            max_chars=70,
         )
         if st.session_state.password:
             iniciar_sesion(st.session_state.usuario, st.session_state.password)

@@ -18,13 +18,6 @@ for k, v in {
         st.session_state[k] = v
         st.session_state[k] = v
 
-"""
-# Estado de cuenta del cliente
-"""
-
-if st.button("Refrescar"):
-    st.cache_data.clear()
-
 
 def set_stage(i):
     st.session_state.stage2 = i
@@ -44,11 +37,11 @@ def get_recibos_pendientes(cod_cliente: str):
 
 
 if st.session_state.stage2 == 1:
+    if st.button("Refrescar"):
+        st.cache_data.clear()
+
     tab1, tab2 = st.tabs(["📑 Recibos pendientes", "📰 Movimientos"])
     with tab1:
-        """
-        ## ℹ️ Para registrar pagos:
-        """
         with st.expander(" Seguir instrucciones 👇", expanded=False):
             st.markdown(
                 """
@@ -238,8 +231,7 @@ if st.session_state.stage2 == 3:
             sleep(0.5)
             set_stage(0)
             st.rerun()
-    with col8:
-        # icono de regresar
-        if st.button(" 📊 recibos pendientes"):
-            set_stage(0)
-            st.rerun()
+
+    if st.button(" 📊 Ir a recibos pendientes"):
+        set_stage(0)
+        st.rerun()

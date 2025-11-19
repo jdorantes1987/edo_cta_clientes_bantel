@@ -37,6 +37,10 @@ for key, default in [
     ("stage", 0),
     ("conexion", None),
     ("auth_manager", None),
+    ("role_manager", None),
+    ("logged_in", False),
+    ("user", ""),
+    ("cod_client", None),
 ]:
     if key not in st.session_state:
         st.session_state[key] = default
@@ -154,9 +158,9 @@ if st.session_state.stage == 1:
             max_chars=70,
         )
         if st.session_state.password:
-            st.button("Iniciar sesión", type="primary")
             iniciar_sesion(st.session_state.usuario, st.session_state.password)
-        else:
+
+        if not st.session_state.logged_in:
             if st.button("Atrás"):
                 del st.session_state.usuario
                 del st.session_state.password

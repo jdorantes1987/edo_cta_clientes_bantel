@@ -49,9 +49,9 @@ if st.session_state.stage2 == 1:
                 """
                 1. **Revisa los recibos pendientes en la tabla.**
                 2. **Selecciona los recibos que deseas pagar.**
-                3. **Presiona el botón de *"Registrar y validar pago"*.**
+                3. **Presiona el botón de *"validar pago"*.**
                 4. **Anota la fecha, referencia bancaria y monto del pago móvil.**
-                5. **Presiona el botón de *"Registrar y validar pago"*.**
+                5. **Presiona el botón de *"Registrar pago"*.**
                 """
             )
 
@@ -59,8 +59,10 @@ if st.session_state.stage2 == 1:
         cod_cliente = st.session_state.cod_client
         df_recibos = get_recibos_pendientes(cod_cliente)
         if df_recibos.empty:
-            st.info("No hay recibos pendientes para este cliente.")
+            st.info("Cliente solvente!")
             st.stop()
+        else:
+            st.warning("Tienes recibo(s) pendiente(s) por pagar.")
 
         # Inserta columna llamada 'Select'
         df_recibos.insert(0, "sel", False)

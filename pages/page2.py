@@ -49,9 +49,9 @@ if st.session_state.stage2 == 1:
                 """
                 1. **Revisa los recibos pendientes en la tabla.**
                 2. **Selecciona los recibos que deseas pagar.**
-                3. **Presiona el botón de *"validar pago"*.**
+                3. **Presiona el botón de *"Registrar pago"*.**
                 4. **Anota la fecha, referencia bancaria y monto del pago móvil.**
-                5. **Presiona el botón de *"Registrar pago"*.**
+                5. **Presiona el botón de *"Validar pago"*.**
                 """
             )
 
@@ -149,7 +149,7 @@ if st.session_state.stage2 == 1:
                 st.metric("Total seleccionado", f"${st.session_state.total_sel:,.2f}")
 
         # Acción principal
-        if st.button("Validar pago"):
+        if st.button("✳️ Registrar pago"):
             if st.session_state.seleccionados.empty:
                 st.warning("No has seleccionado ningún recibo para pagar.")
                 st.stop()
@@ -227,7 +227,7 @@ if st.session_state.stage2 == 3:
     col7, col8 = st.columns(2)
     with col7:
         # icono de regresar
-        if st.button("💱 Registrar pago"):
+        if st.button("📰 Validar pago"):
             st.session_state.pagos_realizados.append(
                 {
                     "fecha_pago": st.session_state.fecha_pago,

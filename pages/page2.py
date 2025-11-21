@@ -133,6 +133,14 @@ if st.session_state.stage2 == 1:
             st.session_state.seleccionados = df_edited[df_edited["sel"]]
             if st.session_state.seleccionados.shape[0] > 0:
                 st.metric("Seleccionados", st.session_state.seleccionados.shape[0])
+                # Acción principal
+                if st.button("✳️ Registrar pago"):
+                    st.success(
+                        f"{st.session_state.seleccionados.shape[0]} recibos preparados para registro."
+                    )
+                    set_stage(2)
+                    st.rerun()
+                    # aquí añadir lógica de procesamiento / validación
             else:
                 st.session_state.seleccionados["total_monto_neto"] = 0.0
         with col3:
@@ -148,17 +156,6 @@ if st.session_state.stage2 == 1:
             if st.session_state.total_sel > 0.0:
                 st.metric("Total seleccionado", f"${st.session_state.total_sel:,.2f}")
 
-        # Acción principal
-        if st.button("✳️ Registrar pago"):
-            if st.session_state.seleccionados.empty:
-                st.warning("No has seleccionado ningún recibo para pagar.")
-                st.stop()
-            st.success(
-                f"{st.session_state.seleccionados.shape[0]} recibos preparados para registro."
-            )
-            set_stage(2)
-            st.rerun()
-            # aquí añadir lógica de procesamiento / validación
     with tab2:
         st.subheader("Movimientos realizados")
         st.info("Aquí se mostrarán los movimientos realizados por el cliente.")
@@ -181,14 +178,16 @@ if st.session_state.stage2 >= 2:
     monto_en_bs = st.session_state.tasa_today * st.session_state.total_sel
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.metric(
-            "Tasa del día (Bs/USD)",
-            f"Bs {st.session_state.tasa_today:,.4f}",
+        st.markdown(
+            f"<div style='color: gray; font-size: 20px;'><strong> Tasa de cambio </strong>: Bs {st.session_state.tasa_today:,.2f} Bs/USD</div>",
+            unsafe_allow_html=True,
         )
     with col2:
-        st.metric(
-            "Total a pagar",
-            f"Bs {monto_en_bs:,.2f}",
+        st.markdown(
+            f"<div style='background-color: blue; color: white;font-size: 22px; padding: 10px; border-radius: 5px;'>"
+            f"<strong>Total a pagar</strong>: Bs {monto_en_bs:,.2f}"
+            f"</div>",
+            unsafe_allow_html=True,
         )
 
     with col3:
@@ -223,11 +222,15 @@ if st.session_state.stage2 >= 2:
             disabled=True,
         )
 
+    if st.button(" 📊 Volver a recibos pendientes"):
+        set_stage(0)
+        st.rerun()
+
 if st.session_state.stage2 == 3:
     col7, col8 = st.columns(2)
     with col7:
         # icono de regresar
-        if st.button("📰 Validar pago"):
+        if st.button("🚀 Validar pago"):
             st.session_state.pagos_realizados.append(
                 {
                     "fecha_pago": st.session_state.fecha_pago,
@@ -235,13 +238,10 @@ if st.session_state.stage2 == 3:
                     "monto_pago": st.session_state.monto_pago,
                 }
             )
+            st.balloons()
             st.success("Pago registrado con éxito!")
             sleep(0.5)
             st.info("Actualizando información...")
             sleep(0.5)
             set_stage(0)
             st.rerun()
-
-    if st.button(" 📊 Ir a recibos pendientes"):
-        set_stage(0)
-        st.rerun()
